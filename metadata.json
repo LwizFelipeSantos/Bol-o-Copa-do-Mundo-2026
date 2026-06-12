@@ -1,0 +1,6 @@
+{
+  "name": "Bolão Copa do Mundo 2026",
+  "description": "App de palpites da Copa do Mundo de 2026",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

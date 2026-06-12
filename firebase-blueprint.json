@@ -1,0 +1,80 @@
+{
+  "entities": {
+    "Admin": {
+      "title": "Admin",
+      "description": "An administrator allowed to configure matches.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "addedBy": { "type": "string" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["email", "addedBy", "createdAt"]
+    },
+    "Setting": {
+      "title": "Setting",
+      "description": "Global application setting.",
+      "type": "object",
+      "properties": {
+        "value": { "type": "string" },
+        "updatedAt": { "type": "number" }
+      },
+      "required": ["value", "updatedAt"]
+    },
+    "Match": {
+       "title": "Match",
+       "description": "A match in the predictor",
+       "type": "object",
+       "properties": {
+          "id": { "type": "string" },
+          "tournament": { "type": "string" },
+          "stage": { "type": "string" },
+          "home": { "type": "string" },
+          "homeName": { "type": "string" },
+          "homeLogo": { "type": "string" },
+          "away": { "type": "string" },
+          "awayName": { "type": "string" },
+          "awayLogo": { "type": "string" },
+          "homeScore": { "type": "number" },
+          "awayScore": { "type": "number" },
+          "time": { "type": "number" },
+          "status": { "type": "string" }
+       },
+       "required": ["id"]
+    },
+    "Bet": {
+      "title": "Bet",
+       "description": "A user's bet on a match.",
+       "type": "object",
+       "properties": {
+          "id": { "type": "string" },
+          "matchId": { "type": "string" },
+          "name": { "type": "string" },
+          "avatarUrl": { "type": "string" },
+          "scoreBra": { "type": "number" },
+          "scoreOpponent": { "type": "number" },
+          "amount": { "type": "number" },
+          "timestamp": { "type": "string" }
+       },
+       "required": ["id"]
+    }
+  },
+  "firestore": {
+    "admins/{adminId}": {
+      "schema": { "$ref": "#/entities/Admin" },
+      "description": "Authorized administrators."
+    },
+    "settings/{settingId}": {
+      "schema": { "$ref": "#/entities/Setting" },
+      "description": "Global settings like activeMatchId."
+    },
+    "matches/{matchId}": {
+      "schema": { "$ref": "#/entities/Match" },
+      "description": "Available matches."
+    },
+    "bets/{betId}": {
+      "schema": { "$ref": "#/entities/Bet" },
+      "description": "User bets on matches."
+    }
+  }
+}
