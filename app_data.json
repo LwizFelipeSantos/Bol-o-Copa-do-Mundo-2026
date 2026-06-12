@@ -1,0 +1,57 @@
+{
+  "activeMatchId": "m_1781304096665",
+  "manualMatches": [
+    {
+      "id": "m_1781304096665",
+      "tournament": "Copa do Mundo 2026",
+      "stage": "Jogos",
+      "home": "BRA",
+      "homeName": "Brasil",
+      "homeLogo": "https://flagcdn.com/w80/br.png",
+      "away": "MAR",
+      "awayName": "Marrocos",
+      "awayLogo": "https://flagcdn.com/w80/ma.png",
+      "homeScore": 0,
+      "awayScore": 0,
+      "time": 0,
+      "status": "SCHEDULED"
+    },
+    {
+      "id": "m_1781304120692",
+      "tournament": "Copa do Mundo 2026",
+      "stage": "Jogos",
+      "home": "BRA",
+      "homeName": "Brasil",
+      "homeLogo": "https://flagcdn.com/w80/br.png",
+      "away": "HAI",
+      "awayName": "Haiti",
+      "awayLogo": "https://flagcdn.com/w80/ht.png",
+      "homeScore": 0,
+      "awayScore": 0,
+      "time": 0,
+      "status": "SCHEDULED"
+    },
+    {
+      "id": "m_1781304127831",
+      "tournament": "Copa do Mundo 2026",
+      "stage": "Jogos",
+      "home": "BRA",
+      "homeName": "Brasil",
+      "homeLogo": "https://flagcdn.com/w80/br.png",
+      "away": "ESC",
+      "awayName": "Escócia",
+      "awayLogo": "https://flagcdn.com/w80/gb-sct.png",
+      "homeScore": 0,
+      "awayScore": 0,
+      "time": 0,
+      "status": "SCHEDULED"
+    }
+  ],
+  "bets": [],
+  "admins": [
+    "LuizFelipeNGL@gmail.com"
+  ],
+  "currentLeagueId": "71",
+  "currentSeason": "2024",
+  "dataSource": "manual"
+}

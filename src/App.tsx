@@ -7,6 +7,7 @@ type Match = {
   id: string;
   tournament?: string;
   stage?: string;
+  matchDate?: string;
   home: string;
   homeName: string;
   homeLogo?: string;
@@ -98,11 +99,6 @@ export default function App() {
   const [allowedAdmins, setAllowedAdmins] = useState<string[]>([]);
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  // API Debug & Settings
-  const [apiDebug, setApiDebug] = useState<any>(null);
-  const [leagueIdInput, setLeagueIdInput] = useState('');
-  const [seasonInput, setSeasonInput] = useState('');
-  const [dataSourceInput, setDataSourceInput] = useState('simulation');
 
   // New Bet Form
   const [newBetName, setNewBetName] = useState('');
@@ -118,6 +114,7 @@ export default function App() {
   // Manual Match Form
   const [newHomeTeam, setNewHomeTeam] = useState(WORLD_CUP_TEAMS.find(t=>t.code === 'br')?.code || WORLD_CUP_TEAMS[0].code);
   const [newAwayTeam, setNewAwayTeam] = useState(WORLD_CUP_TEAMS.find(t=>t.code === 'fr')?.code || WORLD_CUP_TEAMS[1].code);
+  const [newMatchDate, setNewMatchDate] = useState('');
   
   // Admin Panel Setup
   const [selectedMatchId, setSelectedMatchId] = useState('');
@@ -141,18 +138,10 @@ export default function App() {
       const allM = await allRes.json();
       setAllMatches(allM);
       setIsLoading(false);
-      
-      const debugRes = await fetch('/api/debug');
-      const debugData = await debugRes.json();
-      setApiDebug(debugData);
 
       const adminsRes = await fetch('/api/admins');
       const adminsData = await adminsRes.json();
       setAllowedAdmins(adminsData);
-
-      if (!leagueIdInput) setLeagueIdInput(debugData.currentLeagueId || '71');
-      if (!seasonInput) setSeasonInput(debugData.currentSeason || '2024');
-      if (!dataSourceInput) setDataSourceInput(debugData.dataSource || 'simulation');
     } catch (err) {
       console.error("Error fetching data:", err);
     }
@@ -304,15 +293,6 @@ export default function App() {
     fetchActiveData();
   };
 
-  const handleUpdateApiSettings = async () => {
-    await fetch('/api/settings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ leagueId: leagueIdInput, season: seasonInput, newDataSource: dataSourceInput })
-    });
-    fetchActiveData();
-  };
-
   const handleCreateManualMatch = async () => {
     const home = WORLD_CUP_TEAMS.find(t => t.code === newHomeTeam);
     const away = WORLD_CUP_TEAMS.find(t => t.code === newAwayTeam);
@@ -323,11 +303,13 @@ export default function App() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
         homeName: home.name, homeCode: home.code,
-        awayName: away.name, awayCode: away.code 
+        awayName: away.name, awayCode: away.code,
+        matchDate: newMatchDate
       })
     });
     setNewHomeTeam(WORLD_CUP_TEAMS.find(t=>t.code === 'br')?.code || WORLD_CUP_TEAMS[0].code);
     setNewAwayTeam(WORLD_CUP_TEAMS.find(t=>t.code === 'fr')?.code || WORLD_CUP_TEAMS[1].code);
+    setNewMatchDate('');
     fetchActiveData();
   };
 
@@ -496,15 +478,13 @@ export default function App() {
           <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col items-center justify-center relative overflow-hidden shrink-0">
             <div className="absolute top-2 left-3 flex flex-col">
               <span className="text-[9px] uppercase font-black text-yellow-500">{matchState.tournament}</span>
-              <span className="text-[10px] font-bold text-slate-400">{matchState.stage}</span>
+              <span className="text-[10px] font-bold text-slate-400">
+                 {matchState.stage} {matchState.matchDate ? `• ${matchState.matchDate}` : ''}
+              </span>
             </div>
             <div className="absolute top-0 right-0 p-2 flex items-center gap-2">
-              <span className="flex items-center gap-1 text-[10px] text-white/50 uppercase font-bold bg-black/30 px-2 py-0.5 rounded-full border border-white/10">
-                <Activity size={10} className="text-emerald-500" />
-                API-Football Feed
-              </span>
               <span className={`text-white text-[10px] px-2 py-0.5 rounded-full font-bold ${matchState.status === 'LIVE' ? 'bg-red-600 animate-pulse' : 'bg-slate-600'}`}>
-                {matchState.status} {matchState.time > 0 ? `${matchState.time}'` : ''}
+                {matchState.status === 'SCHEDULED' ? 'AGENDADO' : matchState.status} {matchState.time > 0 ? `${matchState.time}'` : ''}
               </span>
             </div>
             <div className="flex justify-around items-center w-full mb-6 mt-4">
@@ -665,8 +645,10 @@ export default function App() {
                {allMatches.map(m => (
                   <div key={m.id} className="bg-slate-950 border border-slate-800 rounded-xl p-4">
                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-[10px] font-black uppercase text-slate-400">{m.tournament} &bull; {m.stage}</span>
-                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase ${m.status === 'FINISHED' ? 'bg-slate-700' : m.status === 'LIVE' ? 'bg-red-600 animate-pulse' : 'bg-blue-900'}`}>{m.status}</span>
+                        <span className="text-[10px] font-black uppercase text-slate-400">
+                           {m.tournament} &bull; {m.stage} {m.matchDate ? `• ${m.matchDate}` : ''}
+                        </span>
+                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded uppercase ${m.status === 'FINISHED' ? 'bg-slate-700' : m.status === 'LIVE' ? 'bg-red-600 animate-pulse' : 'bg-blue-900'}`}>{m.status === 'SCHEDULED' ? 'AGENDADO' : m.status}</span>
                      </div>
                      <div className="flex items-center justify-center gap-4">
                         <div className="flex flex-col items-center w-16">
@@ -732,162 +714,83 @@ export default function App() {
                 <h3 className="text-xs font-black uppercase tracking-widest text-red-400">Painel Admin</h3>
               </div>
               <p className="text-[10px] text-red-400/60 flex items-center gap-1">
-                <Activity size={10}/> Conectado via Sports API Feed
+                <Activity size={10}/> Controle Manual
               </p>
             </div>
-            
             <div className="p-4 flex-1 space-y-6 overflow-y-auto custom-scrollbar">
-              
-              {/* API Status Info */}
-              {apiDebug && (
-                <div className={`space-y-2 p-3 rounded-xl border ${apiDebug.usingRealApi ? (apiDebug.lastError ? 'bg-red-900/30 border-red-800' : 'bg-emerald-900/30 border-emerald-800') : 'bg-blue-900/30 border-blue-800'}`}>
-                  <h4 className="text-[10px] font-black uppercase text-white/70 flex items-center gap-1">
-                    Configuração de API
-                  </h4>
-                  <div className="text-[10px] text-white/60 space-y-2">
-                    <p><strong>Status da Chave:</strong> {apiDebug.apiKeyConfigured ? 'Disponível no Ambiente' : 'Não Encontrada'}</p>
-                    {apiDebug.dataSource === 'simulation' ? (
-                      <p className="text-blue-400 font-bold">API Fictícia (Simulação Interna) Ativada. Grátis e sempre rodando.</p>
-                    ) : apiDebug.usingRealApi ? (
-                      <>
-                        <p className={apiDebug.lastError ? 'text-red-400' : 'text-emerald-400'}>
-                          <strong>Status API Real:</strong> {apiDebug.lastError || 'Conectado com Sucesso!'}
-                        </p>
-                        <p><strong>Jogos Retornados:</strong> {apiDebug.matchesCount}</p>
-                      </>
-                    ) : (
-                       <p className="text-red-400">Falha ao usar API Externa. Chave não encontrada.</p>
-                    )}
-                    
-                    <div className="pt-2 border-t border-white/10 space-y-2">
-                      <p className="text-[9px] text-slate-400">Nota importante: Nenhuma API real possui os jogos ao vivo da Copa de 2026 ainda! Para desenvolver seu app hoje, use a "Simulação" (que imita perfeitamente a API) ou teste com um campeonato atual (como o Brasileirão, Liga 71, ano 2024).</p>
-                      
-                      <div className="space-y-1">
-                        <label className="text-[9px] uppercase font-bold text-slate-500">Fonte de Dados</label>
-                        <select 
-                          value={dataSourceInput}
-                          onChange={e => setDataSourceInput(e.target.value)}
-                          className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs"
-                        >
-                          <option value="simulation">Módulo Simulação Fictício (Recomendado p/ 2026)</option>
-                          <option value="manual">Controle Manual (Você insere os dados ao vivo)</option>
-                          <option value="api-football">API-Football Externa (Requer Chave, para torneios atuais)</option>
-                        </select>
-                      </div>
-
-                      {dataSourceInput === 'api-football' && (
-                        <div className="grid grid-cols-2 gap-2 mt-2">
-                          <div className="space-y-1">
-                            <label className="text-[9px] uppercase font-bold text-slate-500">League ID</label>
-                            <input 
-                              type="text" 
-                              value={leagueIdInput}
-                              onChange={e => setLeagueIdInput(e.target.value)}
-                              placeholder="71"
-                              className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-center"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-[9px] uppercase font-bold text-slate-500">Temporada</label>
-                            <input 
-                              type="text" 
-                              value={seasonInput}
-                              onChange={e => setSeasonInput(e.target.value)}
-                              placeholder="2024"
-                              className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-xs text-center"
-                            />
-                          </div>
-                        </div>
-                      )}
-                      
-                      <button 
-                        onClick={handleUpdateApiSettings}
-                        className="w-full bg-blue-600 hover:bg-blue-500 mt-2 text-white font-bold py-1.5 rounded transition-all text-[9px] uppercase"
-                      >
-                        Aplicar Configuração
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               {/* Gerenciador Manual */}
-              {apiDebug?.dataSource === 'manual' && (
-                <div className="space-y-3 bg-slate-800/30 p-3 rounded-xl border border-slate-700">
-                  <h4 className="text-[10px] font-black uppercase text-slate-400 flex items-center gap-1">
-                    Cadastrar Partida Manual
-                  </h4>
-                  <div className="grid grid-cols-2 gap-2">
-                    <select 
-                      value={newHomeTeam} onChange={e => setNewHomeTeam(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1.5 text-xs text-white"
-                    >
-                      {WORLD_CUP_TEAMS.map(t => <option key={`h-${t.code}`} value={t.code}>{t.name}</option>)}
-                    </select>
-                    <select 
-                      value={newAwayTeam} onChange={e => setNewAwayTeam(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1.5 text-xs text-white"
-                    >
-                      {WORLD_CUP_TEAMS.map(t => <option key={`a-${t.code}`} value={t.code}>{t.name}</option>)}
-                    </select>
-                  </div>
-                  <button onClick={handleCreateManualMatch} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-1.5 rounded transition-all text-[9px] uppercase">
-                    Adicionar Jogo
-                  </button>
+              <div className="space-y-3 bg-slate-800/30 p-3 rounded-xl border border-slate-700">
+                <h4 className="text-[10px] font-black uppercase text-slate-400 flex items-center gap-1">
+                  Cadastrar Partida Manual
+                </h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <select 
+                    value={newHomeTeam} onChange={e => setNewHomeTeam(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1.5 text-xs text-white"
+                  >
+                    {WORLD_CUP_TEAMS.map(t => <option key={`h-${t.code}`} value={t.code}>{t.name}</option>)}
+                  </select>
+                  <select 
+                    value={newAwayTeam} onChange={e => setNewAwayTeam(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1.5 text-xs text-white"
+                  >
+                    {WORLD_CUP_TEAMS.map(t => <option key={`a-${t.code}`} value={t.code}>{t.name}</option>)}
+                  </select>
+                </div>
+                <input
+                  type="text"
+                  placeholder="Data/Hora (Ex: 15/06 16:00)"
+                  value={newMatchDate}
+                  onChange={e => setNewMatchDate(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1.5 text-xs text-white"
+                />
+                <button onClick={handleCreateManualMatch} className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-1.5 rounded transition-all text-[9px] uppercase">
+                  Adicionar Jogo
+                </button>
 
-                  <h4 className="text-[10px] font-black uppercase text-slate-400 mt-4 pt-4 border-t border-slate-700">
-                    Jogos Cadastrados (Placar Ao Vivo)
-                  </h4>
-                  <div className="space-y-2">
-                    {allMatches.length === 0 && <p className="text-xs text-slate-500">Nenhum jogo manual cadastrado.</p>}
-                    {allMatches.map(m => (
-                      <div key={m.id} className="p-2 border border-slate-700 rounded bg-slate-900 grid gap-2">
-                        <div className="flex justify-between items-center text-[10px] font-bold text-white uppercase">
-                          <span>{m.homeName} vs {m.awayName}</span>
-                          <button onClick={() => handleDeleteManualMatch(m.id)} className="text-red-400 hover:text-red-300">Apagar</button>
-                        </div>
-                        <div className="grid grid-cols-4 gap-1 items-end">
-                          <label className="text-[8px] text-slate-500 flex flex-col gap-1">Gols C.
-                            <input type="number" min="0" value={m.homeScore} onChange={e => handleUpdateManualMatch(m.id, {homeScore: Number(e.target.value)})} className="w-full bg-slate-950 border border-slate-600 rounded px-1 py-1 text-xs text-center text-white" />
-                          </label>
-                          <label className="text-[8px] text-slate-500 flex flex-col gap-1">Gols V.
-                            <input type="number" min="0" value={m.awayScore} onChange={e => handleUpdateManualMatch(m.id, {awayScore: Number(e.target.value)})} className="w-full bg-slate-950 border border-slate-600 rounded px-1 py-1 text-xs text-center text-white" />
-                          </label>
-                          <label className="text-[8px] text-slate-500 flex flex-col gap-1">Tempo
-                            <input type="number" min="0" value={m.time} onChange={e => handleUpdateManualMatch(m.id, {time: Number(e.target.value)})} className="w-full bg-slate-950 border border-slate-600 rounded px-1 py-1 text-xs text-center text-white" placeholder="Min" />
-                          </label>
-                          <label className="text-[8px] text-slate-500 flex flex-col gap-1">Status
-                            <select value={m.status} onChange={e => handleUpdateManualMatch(m.id, {status: e.target.value})} className="w-full bg-slate-950 border border-slate-600 rounded px-1 py-1 text-xs text-center text-white">
-                              <option value="SCHEDULED">Agend.</option>
-                              <option value="LIVE">Vivo</option>
-                              <option value="FINISHED">Fim</option>
-                            </select>
-                          </label>
+                <h4 className="text-[10px] font-black uppercase text-slate-400 mt-4 pt-4 border-t border-slate-700">
+                  Jogos Cadastrados (Placar Ao Vivo)
+                </h4>
+                <div className="space-y-2">
+                  {allMatches.length === 0 && <p className="text-xs text-slate-500">Nenhum jogo manual cadastrado.</p>}
+                  {allMatches.map(m => (
+                    <div key={m.id} className="p-2 border border-slate-700 rounded bg-slate-900 grid gap-2">
+                      <div className="flex justify-between items-center text-[10px] font-bold text-white uppercase mt-1 px-1">
+                        <span className="flex items-center gap-2">
+                           <span className={`w-2 h-2 rounded-full ${m.status === 'LIVE' ? 'bg-red-500 animate-pulse' : 'bg-slate-500'}`}></span>
+                           {m.homeName} vs {m.awayName}
+                        </span>
+                        <div className="flex gap-2">
+                          {m.id !== matchState?.id && (
+                             <button onClick={() => handleChangeActiveMatch(m.id)} className="text-yellow-500 hover:text-yellow-400 font-bold bg-yellow-900/40 px-2 py-0.5 rounded">Ativar Visão App</button>
+                          )}
+                          {m.id === matchState?.id && (
+                             <span className="text-emerald-500 font-bold bg-emerald-900/40 px-2 py-0.5 rounded">ATIVO NO APP</span>
+                          )}
+                          <button onClick={() => handleDeleteManualMatch(m.id)} className="text-red-400 hover:text-red-300 ml-2">Apagar</button>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Seleção do Jogo Baseado na API de Esportes */}
-              <div className="space-y-3 bg-slate-800/30 p-3 rounded-xl border border-slate-800">
-                <h4 className="text-[10px] font-black uppercase text-slate-400 flex items-center gap-1">
-                  <ListTodo size={12} /> Selecionar Partida Esportiva
-                </h4>
-                <div className="space-y-1">
-                  <p className="text-[9px] text-slate-500">Puxando jogos previstos online...</p>
-                  <select 
-                    value={selectedMatchId}
-                    onChange={(e) => handleChangeActiveMatch(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-700 rounded-lg px-2 py-2 text-xs font-bold focus:outline-none focus:border-emerald-500 text-slate-300"
-                  >
-                    {allMatches.map(m => (
-                      <option key={m.id} value={m.id}>
-                        {m.homeName} x {m.awayName} {m.status === 'LIVE' ? '(AO VIVO)' : ''}
-                      </option>
-                    ))}
-                  </select>
+                      <div className="grid grid-cols-4 gap-1 items-end mt-1">
+                        <label className="text-[8px] text-slate-500 flex flex-col gap-1">Gols C.
+                          <input type="number" min="0" value={m.homeScore} onChange={e => handleUpdateManualMatch(m.id, {homeScore: Number(e.target.value)})} className="w-full bg-slate-950 border border-slate-600 rounded px-1 py-1 text-xs text-center text-white" />
+                        </label>
+                        <label className="text-[8px] text-slate-500 flex flex-col gap-1">Gols V.
+                          <input type="number" min="0" value={m.awayScore} onChange={e => handleUpdateManualMatch(m.id, {awayScore: Number(e.target.value)})} className="w-full bg-slate-950 border border-slate-600 rounded px-1 py-1 text-xs text-center text-white" />
+                        </label>
+                        <label className="text-[8px] text-slate-500 flex flex-col gap-1">Tempo
+                          <input type="number" min="0" value={m.time} onChange={e => handleUpdateManualMatch(m.id, {time: Number(e.target.value)})} className="w-full bg-slate-950 border border-slate-600 rounded px-1 py-1 text-xs text-center text-white" placeholder="Min" />
+                        </label>
+                        <label className="text-[8px] text-slate-500 flex flex-col gap-1">Status
+                          <select value={m.status} onChange={e => handleUpdateManualMatch(m.id, {status: e.target.value})} className="w-full bg-slate-950 border border-slate-600 rounded px-1 py-1 text-xs text-center text-white">
+                            <option value="SCHEDULED">Agendado</option>
+                            <option value="LIVE">Vivo</option>
+                            <option value="FINISHED">Fim</option>
+                          </select>
+                        </label>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -1015,7 +918,7 @@ export default function App() {
       {/* Bottom Status Bar */}
       <footer className="h-8 bg-blue-900 flex items-center px-4 shrink-0 justify-between border-t border-blue-800">
         <div className="flex items-center gap-2 lg:gap-4 text-[9px] lg:text-[10px] font-bold text-white/70 uppercase">
-          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Feed API Conectado</span>
+          <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span> Modo Manual</span>
           <span className="hidden sm:inline">Atualizado ao Vivo</span>
         </div>
         <div className="text-[9px] lg:text-[10px] font-bold text-white/50">
